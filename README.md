@@ -89,8 +89,8 @@ python3 L10nXcstrings.py
 
 ---
 ## 📝TODO:
-- -add parameters-
-- make a spm compatible
+- ✅ add parameters
+- Make a SPM compatible
 ---
 
 ## 📄 License
