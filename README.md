@@ -68,6 +68,11 @@ To regenerate after .xcstrings updates or key usage changes, just re-run:
 python3 L10nXcstrings.py
 ```
 
+
+---
+## 📝TODO:
+- add parameters
+- make a spm compatible
 ---
 
 ## 📄 License
