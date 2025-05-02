@@ -68,10 +68,28 @@ To regenerate after .xcstrings updates or key usage changes, just re-run:
 python3 L10nXcstrings.py
 ```
 
+## 🎮 Parameters
+
+- Path to `.xcstrings` file
+```
+ "--input", default="Localizable.xcstrings"
+```
+- Path to output `.swift` file
+```
+ "--output-swift", default="Generated/Strings+Generated.swift"
+```
+- Directory to scan Swift source code
+```
+ "--source-dir", default="."
+```
+- Name of the generated enum
+```
+ "--enum-name", default="L10n"
+```
 
 ---
 ## 📝TODO:
-- add parameters
+- -add parameters-
 - make a spm compatible
 ---
 
