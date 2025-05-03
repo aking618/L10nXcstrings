@@ -84,6 +84,9 @@ def parse_args():
     parser.add_argument("--enum-name", default="L10n", help="Name of the generated enum")
     return parser.parse_args()
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
     generate_strings(args)
+
+if __name__ == "__main__":
+    main()
