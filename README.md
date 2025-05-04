@@ -69,12 +69,6 @@ l10n-xcstrings
 case loginTitle = "login.title" //TODO: Unused
 ```
 
-To regenerate after .xcstrings updates or key usage changes, just re-run:
-
-```bash
-python3 L10nXcstrings.py
-```
-
 ## 🎮 Parameters
 
 - Path to `.xcstrings` file
