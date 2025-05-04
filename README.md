@@ -32,15 +32,22 @@ SRC/
 ---
 
 ## 🚀 Usage
-
+0. **Install the script via Homebrew**
+   ```
+   brew tap disconnecter/l10n https://github.com/Disconnecter/homebrew-l10n
+   ```
+   ```
+   brew install l10n-xcstrings
+   ```
+   
 1. **Place your `.xcstrings` file** in the correct path (`Resources/Localizable.xcstrings`)
 2. **Run the script**:
 
 ```bash
-python3 L10nXcstrings.py
+l10n-xcstrings
 ```
 
-3.	**🎉 You’ll get:**
+4.	**🎉 You’ll get:**
 - Strings+Generated.swift (updated)
 - Unused.txt (if unused keys found)
 - Output in terminal showing the count of unused keys
@@ -60,12 +67,6 @@ python3 L10nXcstrings.py
 
 ```
 case loginTitle = "login.title" //TODO: Unused
-```
-
-To regenerate after .xcstrings updates or key usage changes, just re-run:
-
-```bash
-python3 L10nXcstrings.py
 ```
 
 ## 🎮 Parameters
@@ -90,7 +91,8 @@ python3 L10nXcstrings.py
 ---
 ## 📝TODO:
 - ✅ add parameters
-- Make a SPM compatible
+- ~Make a SPM compatible~ Not working solution, because of the sandbox of SPM
+- ✅ Make a brew package
 ---
 
 ## 📄 License
