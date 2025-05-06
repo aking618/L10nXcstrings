@@ -102,6 +102,8 @@ def generate_strings(args):
     swiftified_keys = {swiftify_key(k): k for k in sorted_keys}
     unused_keys = find_unused_keys(args, swiftified_keys)
 
+    os.makedirs(os.path.dirname(args.output_swift), exist_ok=True)
+
     with open(args.output_swift, "w", encoding="utf-8") as f:
         f.write("// swiftlint:disable all\n")
         f.write(f"// Generated from {os.path.basename(args.input)}\n")
