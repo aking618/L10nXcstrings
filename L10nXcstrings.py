@@ -95,7 +95,7 @@ def find_unused_keys(args, swiftified_keys):
 def sanitize_comment(text):
         return ' '.join(text.strip().splitlines())
 
-def generate_enum(args):
+def generate_strings(args):
     keys_and_strings = get_keys_and_strings_from_xcstrings(args.input)
     sorted_keys = sorted(keys_and_strings.keys())
 
