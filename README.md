@@ -26,7 +26,6 @@ SRC/
 │   ├── Localizable.xcstrings
 │   └── Generated/
 │       └── Strings+Generated.swift   ← ✅ Auto-generated
-├── strings.py                        ← 🧠 This script
 └── Unused.txt                        ← 📄 List of unused keys (if any)
 ```
 ---
