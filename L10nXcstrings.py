@@ -14,8 +14,14 @@ def get_keys_and_strings_from_xcstrings(path):
     for key, val in strings.items():
         try:
             string_val = val["localizations"]["en"]["stringUnit"]["value"]
-            result[key]["value"] = string_val
-
+            comment = string_val
+            if "comment" in val:
+                comment = val["comment"]
+            
+            result[key] = {
+                "value": string_val,
+                "comment": comment
+            }
             
 
         except KeyError:
@@ -99,58 +105,63 @@ def sanitize_comment(text):
         return ' '.join(text.strip().splitlines())
 
 def generate_strings(args):
-    keys_and_strings_and_comments = get_keys_and_strings_from_xcstrings(args.input)
+    keys_and_strings = get_keys_and_strings_from_xcstrings(args.input)
 
-    for key, value in keys_and_strings_and_comments.items():
-        print(f"Key: {key}")
-        for k, v in value.items():
-            print(f"  {k}: {v}")
-
-    # sorted_keys = sorted(keys_and_strings.keys())
-
-    return
+    sorted_keys = sorted(keys_and_strings.keys())
 
     # Split keys into categories based on the first part of the key
-    original_keys = {}
-    split_keys = {}
-    split_values = {}
+    split_strings = {}
+
     for key in sorted_keys:
         parts = key.split(".")
         if len(parts) > 1:
             first_part = parts[0]
-            if first_part not in split_keys:
-                split_keys[first_part] = []
+            if first_part not in split_strings:
+                split_strings[first_part] = []
             newKey = ".".join(parts[1:])
-            split_keys[first_part].append(newKey)
-            split_values[newKey] = keys_and_strings[key]
-            original_keys[newKey] = key
-        else:
-            if "general" not in split_keys:
-                split_keys["general"] = []
-            split_keys["general"].append(key)
-            split_values[key] = keys_and_strings[key]
-            original_keys[key] = key
 
-    split_keys = {k: sorted(v) for k, v in split_keys.items()}
+            keyValues = {
+                "key": newKey,
+                "value": keys_and_strings[key]["value"],
+                "comment": keys_and_strings[key]["comment"],
+                "original_key": key
+            }
+
+            split_strings[first_part].append(keyValues)
+
+        else:
+            if "general" not in split_strings:
+                split_strings["general"] = []
+        
+            keyValues = {
+                "key": key,
+                "value": keys_and_strings[key]["value"],
+                "comment": keys_and_strings[key]["comment"],
+                "original_key": key
+            }
+            split_strings["general"].append(keyValues)
+
+    # Sort categories alphabetically
+    split_strings = dict(sorted(split_strings.items(), key=lambda x: x[0]))
+
+    # Sort keys within each category
+    for category, keys in split_strings.items():
+        split_strings[category] = sorted(keys, key=lambda x: x["key"])
 
     # Generate Swiftified keys to see if they are used in the code
     swiftified_keys = []
-    for category, keys in split_keys.items():
+    for category, keys in split_strings.items():
         for key in keys:
+            index = keys.index(key)
             capitalized_category = category.capitalize()
-            swiftified_key = swiftify_key(key)
+            swiftified_key = swiftify_key(key["key"])
             swiftified_keys.append(f"{capitalized_category}.{swiftified_key}")
+            split_strings[category][index]["unused_key"] = f"{capitalized_category}.{swiftified_key}"
 
 
     unused_keys = find_unused_keys(args, swiftified_keys)
 
     os.makedirs(os.path.dirname(args.output_swift), exist_ok=True)
-
-    # sort categories alphabetically
-    split_keys = dict(sorted(split_keys.items(), key=lambda item: item[0]))
-    # sort keys alphabetically
-    for category, keys in split_keys.items():
-        split_keys[category] = sorted(keys)
 
     # Generate the Swift file
     with open(args.output_swift, "w", encoding="utf-8") as f:
@@ -161,7 +172,7 @@ def generate_strings(args):
         f.write("import Foundation\n\n")
         f.write(f"public enum {args.enum_name}: Equatable, Hashable {{\n")
 
-        for category, keys in split_keys.items():
+        for category, keys in split_strings.items():
             f.write(f"  // MARK: - {category.capitalize()}\n")
 
             # Write category enum
@@ -169,8 +180,8 @@ def generate_strings(args):
 
             # Write keys
             for key in keys:
-                swift_key = swiftify_key(key)
-                string_value = split_values[key]
+                swift_key = swiftify_key(key["key"])
+                string_value = key["value"]
                 types = extract_placeholder_types(string_value)
                 typesArg = []
 
@@ -198,22 +209,21 @@ def generate_strings(args):
                     else:
                         print(f"Unknown type {typ} for key {key}")
                 
-                comment = f"    /// {sanitize_comment(string_value)}"
+                comment = f"    /// {sanitize_comment(key['comment'])}"
 
-                unused_key = f"{category.capitalize()}.{swift_key}"
-                if unused_key in unused_keys:
-                    comment = f"    #warning(\"L10n.{unused_key} is unused\")\n" + comment
+                if key["unused_key"] in unused_keys:
+                    comment = f"    #warning(\"L10n.{key['unused_key']} is unused\")\n" + comment
                 f.write(f"{comment}\n")
                 if types:
                     f.write(f"    public static func {swift_key}({', '.join(typesArg)}) -> LocalizedStringResource {{\n")
                     f.write(f"      LocalizedStringResource(\n")
-                    f.write(f"          \"{original_keys[key]}\",\n")
+                    f.write(f"          \"{key['original_key']}\",\n")
                     f.write(f"          defaultValue: \"{string_value_with_args}\"\n")
                     f.write(f"      )\n")
                     f.write(f"    }}\n")
                 else:
                     f.write(f"    public static let {swift_key} = LocalizedStringResource(\n")
-                    f.write(f"        \"{original_keys[key]}\",\n")
+                    f.write(f"        \"{key['original_key']}\",\n")
                     f.write(f"        defaultValue: \"{string_value}\"\n")
                     f.write(f"    )\n")
                 
