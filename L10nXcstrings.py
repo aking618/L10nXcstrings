@@ -14,7 +14,10 @@ def get_keys_and_strings_from_xcstrings(path):
     for key, val in strings.items():
         try:
             string_val = val["localizations"]["en"]["stringUnit"]["value"]
-            result[key] = string_val
+            result[key]["value"] = string_val
+
+            
+
         except KeyError:
             pass
     return result
@@ -96,9 +99,16 @@ def sanitize_comment(text):
         return ' '.join(text.strip().splitlines())
 
 def generate_strings(args):
-    keys_and_strings = get_keys_and_strings_from_xcstrings(args.input)
+    keys_and_strings_and_comments = get_keys_and_strings_from_xcstrings(args.input)
 
-    sorted_keys = sorted(keys_and_strings.keys())
+    for key, value in keys_and_strings_and_comments.items():
+        print(f"Key: {key}")
+        for k, v in value.items():
+            print(f"  {k}: {v}")
+
+    # sorted_keys = sorted(keys_and_strings.keys())
+
+    return
 
     # Split keys into categories based on the first part of the key
     original_keys = {}
