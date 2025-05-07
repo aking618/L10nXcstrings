@@ -2,19 +2,24 @@
 
 This script (`L10nXcstrings.py`) automates the management of iOS localization strings using the new `Localizable.xcstrings` format. It helps you:
 
-- ✅ Generate a Swift enum (`L10n`) with all localization keys as `case` constants
-- ✅ Automatically annotate unused keys with `//TODO: Unused`
-- ✅ Find and export a list of unused localization keys to `Unused.txt`
+* ✅ Generate a Swift enum (`L10n`) with categorized static properties or methods
+* ✅ Annotate unused keys with `#warning(...)` at compile-time
+* ✅ Export a list of unused localization keys to `Unused.txt`
+* ✅ Safely handle format placeholders (`%@`, `%d`, etc.)
+
+> 📦 Fork maintained by [@aking618](https://github.com/aking618)
 
 ---
 
 ## 🛠 Features
 
-- **Supports `.xcstrings`**: Parses Xcode's new JSON-based localization format.
-- **CamelCase key formatting**: Converts `login.title_screen` → `loginTitleScreen`.
-- **Safe enum generation**: Outputs a clean `Strings+Generated.swift` with `localize()` helper.
-- **Usage analysis**: Scans your Swift codebase for usage of `L10n.<key>`.
-- **Unused keys check**: Detects and marks localization keys that are not used anywhere in the codebase.
+* **Supports `.xcstrings`**: Parses Xcode's new JSON-based localization format.
+* **CamelCase key formatting**: Converts `login.title_screen` → `L10n.Login.titleScreen`.
+* **Safe enum generation**: Outputs a clean, categorized `Strings+Generated.swift` with `LocalizedStringResource` properties and methods.
+* **Placeholder support**: Detects `%@`, `%d`, etc., and generates typed Swift functions.
+* **Usage analysis**: Scans your Swift codebase for usage of `L10n.<category>.<key>`.
+* **Unused key detection**: Marks unused keys with `#warning(...)` and writes to `Unused.txt`.
+* **Category grouping**: Automatically organizes strings into nested enums based on dot-prefixes.
 
 ---
 
@@ -28,70 +33,91 @@ SRC/
 │       └── Strings+Generated.swift   ← ✅ Auto-generated
 └── Unused.txt                        ← 📄 List of unused keys (if any)
 ```
+
 ---
 
 ## 🚀 Usage
+
 0. **Install the script via Homebrew**
-   ```
+   (Original repo tap)
+
+   ```bash
    brew tap disconnecter/l10n https://github.com/Disconnecter/homebrew-l10n
-   ```
-   ```
    brew install l10n-xcstrings
    ```
-   
-1. **Place your `.xcstrings` file** in the correct path (`Resources/Localizable.xcstrings`)
+
+1. **Place your `.xcstrings` file** in the expected path (e.g., `Resources/Localizable.xcstrings`)
+
 2. **Run the script**:
 
-```bash
-l10n-xcstrings
-```
+   ```bash
+   python3 L10nXcstrings.py
+   ```
 
-4.	**🎉 You’ll get:**
-- Strings+Generated.swift (updated)
-- Unused.txt (if unused keys found)
-- Output in terminal showing the count of unused keys
+3. **Or run with custom arguments**:
+
+   ```bash
+   python3 L10nXcstrings.py \
+     --input Resources/Localizable.xcstrings \
+     --output-swift Resources/Generated/Strings+Generated.swift \
+     --output-unused Unused.txt \
+     --source-dir ./MyApp \
+     --ignore-dirs Pods Carthage \
+     --enum-name L10n
+   ```
+
+4. **🎉 You’ll get:**
+
+* `Strings+Generated.swift` (clean, categorized output)
+* `Unused.txt` (if unused keys found)
+* Terminal output showing unused count and warnings
 
 ---
 
 ## 🧪 Requirements
-- Python 3.6+
-- Xcode .xcstrings file format (JSON)
-- Swift codebase that uses L10n.<key> to reference localizations
+
+* Python 3.6+
+* Xcode `.xcstrings` file (JSON format)
+* Swift codebase using `L10n.<category>.<key>` access style
 
 ---
 
 ## 📝 Notes
-- The script automatically camelCases keys like k-about.welcome_screen → kAboutWelcomeScreen
-- Unused keys are marked in the enum like so:
 
-```
-case loginTitle = "login.title" //TODO: Unused
-```
+* Keys like `k-about.welcome_screen` become `L10.K-about.welcomeScreen`
+* Strings are grouped into nested enums using their key prefix (`login.title` → `Login.title`)
+* Keys with format specifiers like `%@`, `%d` generate Swift functions with typed arguments
+* Unused keys are flagged in code like:
 
-## 🎮 Parameters
-
-- Path to `.xcstrings` file
-```
- "--input", default="Localizable.xcstrings"
-```
-- Path to output `.swift` file
-```
- "--output-swift", default="Generated/Strings+Generated.swift"
-```
-- Directory to scan Swift source code
-```
- "--source-dir", default="."
-```
-- Name of the generated enum
-```
- "--enum-name", default="L10n"
+```swift
+#warning("L10n.Login.loginTitle is unused")
+/// Login screen title
+public static let loginTitle = LocalizedStringResource(
+    "login.title",
+    defaultValue: "Welcome!"
+)
 ```
 
 ---
-## 📝TODO:
-- ✅ add parameters
-- ~Make a SPM compatible~ Not working solution, because of the sandbox of SPM
-- ✅ Make a brew package
+
+## 🎮 Parameters
+
+| Argument          | Description                       | Default                               |
+| ----------------- | --------------------------------- | ------------------------------------- |
+| `--input`         | Path to `.xcstrings` file         | `Localizable.xcstrings`               |
+| `--output-swift`  | Output `.swift` file path         | `Generated/Strings+Generated.swift`   |
+| `--output-unused` | Output path for unused keys       | `Unused.txt`                          |
+| `--source-dir`    | Swift source directory to scan    | `.` (current directory)               |
+| `--ignore-dirs`   | Folders to ignore during scanning | `["Pods", "Carthage", "DerivedData"]` |
+| `--enum-name`     | Name of the top-level enum        | `L10n`                                |
+
+---
+
+## ✅ TODO (Completed)
+
+* ✅ Format string placeholder typing
+* ✅ Homebrew installation support
+
 ---
 
 ## 📄 License
@@ -102,4 +128,13 @@ MIT — free to use, modify, and contribute.
 
 🙌 Contributions
 
-Feel free to open issues or submit PRs to extend functionality — e.g., support for filtering folders, checking .localized() string usage, or CLI argument support.
+Open issues or PRs welcome! Feature ideas include:
+
+* Folder filtering for `.xcstrings` parsing
+* `.localized()` usage detection
+* Optional SwiftPM plugin support (blocked by SPM sandboxing)
+* Tests and formatter integrations
+
+---
+
+Let me know if you'd like a badge, example screenshot, or install instructions customized for your personal fork.
