@@ -69,23 +69,28 @@ def extract_placeholder_types(string_value: str) -> list[str]:
 def swiftify_key(key: str) -> str:
     return re.sub(r'[._-](\w)', lambda m: m.group(1).upper(), key)
 
-def find_used_keys_in_code(source_dir, keys, enum_name):
+def find_used_keys_in_code(source_dir, keys, enum_name, ignore_dirs):
     used_keys = set()
-    pattern = re.compile(rf'\b{re.escape(enum_name)}\.([a-zA-Z0-9_]+)\b')
-
     for root, _, files in os.walk(source_dir):
+        # Ignore specified directories
+        if any(ignored in root for ignored in ignore_dirs):
+            continue
         for file in files:
             if file.endswith(".swift"):
                 with open(os.path.join(root, file), "r", encoding="utf-8") as f:
                     content = f.read()
-                    matches = pattern.findall(content)
-                    used_keys.update(matches)
+
+                    for key in keys:
+                        pattern = re.compile(rf"\b{enum_name}\.{key}\b")
+                        matches = pattern.findall(content)
+                        if matches:
+                            used_keys.add(key)
 
     return used_keys
 
 def find_unused_keys(args, swiftified_keys):
     defined_keys = set(swiftified_keys)
-    used_keys = find_used_keys_in_code(args.source_dir, defined_keys, args.enum_name)
+    used_keys = find_used_keys_in_code(args.source_dir, defined_keys, args.enum_name, args.ignore_dirs)
     unused = defined_keys - used_keys
 
     if os.path.exists(args.output_unused):
@@ -241,6 +246,7 @@ def parse_args():
     parser.add_argument("--output-swift", default="Generated/Strings+Generated.swift", help="Path to output .swift file")
     parser.add_argument("--output-unused", default="Unused.txt", help="File to write unused keys to")
     parser.add_argument("--source-dir", default=".", help="Directory to scan Swift source code")
+    parser.add_argument("--ignore-dirs", nargs="+", default=["Pods", "Carthage", "DerivedData"], help="Directories to ignore during scanning")
     parser.add_argument("--enum-name", default="L10n", help="Name of the generated enum")
     return parser.parse_args()
 
