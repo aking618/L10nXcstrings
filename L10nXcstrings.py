@@ -71,10 +71,9 @@ def swiftify_key(key: str) -> str:
 
 def find_used_keys_in_code(source_dir, keys, enum_name, ignore_dirs):
     used_keys = set()
-    for root, _, files in os.walk(source_dir):
+    for root, dirs, files in os.walk(source_dir):
         # Ignore specified directories
-        if any(ignored in root for ignored in ignore_dirs):
-            continue
+        dirs[:] = [d for d in dirs if not any(os.path.join(root, d).startswith(os.path.join(source_dir, ignore)) for ignore in ignore_dirs)]
         for file in files:
             if file.endswith(".swift"):
                 with open(os.path.join(root, file), "r", encoding="utf-8") as f:
