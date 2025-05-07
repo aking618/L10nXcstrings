@@ -192,7 +192,7 @@ def generate_strings(args):
 
                 if types and len(types) > 0:
                     types = [typ.capitalize() for typ in types]
-                    typesArg = [f"p{idx}: {typ}" for idx, typ in enumerate(types)]
+                    typesArg = [f"_ p{idx}: {typ}" for idx, typ in enumerate(types)]
                 else:
                     types = []
                     typesArg = []
