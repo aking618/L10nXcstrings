@@ -225,6 +225,11 @@ def generate_strings(args):
                     f.write(f"          defaultValue: \"{string_value_with_args}\"\n")
                     f.write(f"      )\n")
                     f.write(f"    }}\n")
+                elif "\n" in string_value:
+                    f.write(f"    public static let {swift_key} = LocalizedStringResource(\n")
+                    f.write(f"        \"{key['original_key']}\",\n")
+                    f.write(f"        defaultValue: \"\"\"\n{string_value}\n\"\"\"\n")
+                    f.write(f"    )\n")
                 else:
                     f.write(f"    public static let {swift_key} = LocalizedStringResource(\n")
                     f.write(f"        \"{key['original_key']}\",\n")
